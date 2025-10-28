@@ -1,0 +1,19 @@
+# Simple worker container for ECS/Fargate
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# System deps (minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements-worker.txt ./
+RUN pip install --no-cache-dir -r requirements-worker.txt
+
+COPY ingest_worker.py ./
+
+# The worker runs once by default (cron/scheduler triggers new tasks)
+CMD ["python","/app/ingest_worker.py"]

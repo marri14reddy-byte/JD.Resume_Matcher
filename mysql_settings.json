@@ -1,0 +1,20 @@
+{
+  "host": "74.208.253.155",
+  "port": 3306,
+  "user": "srinidh",
+  "password": "Srinidh@123",
+  "database": "ats",
+  "sql": "SELECT\n  original_filename AS filename,\n  directory_name,\n  stored_filename\nFROM attachment\nWHERE resume = '1'\n  AND stored_locally = '1'\n  AND original_filename REGEXP '\\\\.(pdf|docx|txt)$'\n  AND date_modified >= NOW() - INTERVAL 30 DAY\nLIMIT 500;",
+  "use_ssl": false,
+  "ssl_ca": "",
+  "ssl_cert": "",
+  "ssl_key": "",
+  "filename_col": "filename",
+  "blob_col": "content",
+  "url_col": "",
+  "connect_timeout": 10,
+  "derive_url": false,
+  "dir_col": "directory_name",
+  "stored_name_col": "stored_filename",
+  "base_url": ""
+}

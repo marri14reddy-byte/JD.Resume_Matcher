@@ -1,0 +1,8 @@
+mysql-connector-python
+sentence-transformers
+numpy
+requests
+boto3
+qdrant-client
+pdfplumber
+python-docx

@@ -1,0 +1,40 @@
+# Fly.io app configuration
+# Update 'app' with your unique app name (flyctl will prompt on launch)
+app = "resume-matcher"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+processes = []
+
+[env]
+STREAMLIT_SERVER_PORT = "8080"
+STREAMLIT_SERVER_ADDRESS = "0.0.0.0"
+PYTHONUNBUFFERED = "1"
+# Set via 'fly secrets set' for sensitive values
+# LLM_BASE_URL, LLM_MODEL, MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB
+
+[[services]]
+protocol = "tcp"
+internal_port = 8080
+
+  [services.concurrency]
+  type = "connections"
+  soft_limit = 25
+  hard_limit = 50
+
+  [[services.ports]]
+  port = 80
+  handlers = ["http"]
+
+  [[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]
+
+  [[services.tcp_checks]]
+  interval = "15s"
+  timeout = "2s"
+
+# Persistent volume for Chroma index
+[[mounts]]
+source = "chroma_data"
+destination = "/app/chroma_store"
