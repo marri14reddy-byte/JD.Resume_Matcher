@@ -1,0 +1,33 @@
+# Python & build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual env
+.venv/
+venv/
+ENV/
+
+# Local data & caches
+/downloaded_resumes/
+/chroma_store/
+/.llm_cache/
+/downloaded_resumes/.text_cache/
+/downloaded_resumes/.chunk_cache/
+/downloaded_resumes/resume_embeddings.npy
+/downloaded_resumes/resume_embeddings_index.pkl
+*chunks_hnsw*.faiss
+*chunks_map*.pkl
+chunks_manifest.json
+
+# OAuth tokens / credentials
+/token.pickle
+/credentials.json
+/.streamlit/secrets.toml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/

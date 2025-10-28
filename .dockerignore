@@ -1,0 +1,29 @@
+# Ignore local caches and artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Python envs
+.venv/
+venv/
+ENV/
+
+# Streamlit caches
+.streamlit/cache/
+.streamlit/secrets.toml
+
+# Data & local artifacts
+chroma_store/
+downloaded_resumes/
+.llm_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
