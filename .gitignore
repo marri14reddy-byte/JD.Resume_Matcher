@@ -24,6 +24,7 @@ chunks_manifest.json
 
 # OAuth tokens / credentials
 /token.pickle
+/token.json
 /credentials.json
 /.streamlit/secrets.toml
 

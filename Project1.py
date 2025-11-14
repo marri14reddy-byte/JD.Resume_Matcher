@@ -3,7 +3,8 @@ import os
 
 # Check for credentials.json at startup
 if not os.path.exists('credentials.json'):
-    st.warning("WARNING: credentials.json not found in project directory! Gmail sync will be disabled.")
+    st.warning("⚠️ WARNING: credentials.json not found in project directory! Gmail sync will be disabled.")
+    st.info("📖 To enable Gmail integration, see [GMAIL_SETUP.md](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/GMAIL_SETUP.md) for setup instructions.")
 
 st.write("App started! (after credentials check)")
 
@@ -20,11 +21,22 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# If modifying these scopes, delete the file token.json.
+# Gmail API OAuth Configuration
+# SCOPES: Defines what Gmail permissions the app requests
+# - gmail.modify: Allows reading emails, accessing attachments, and marking emails as read
+# - Does NOT allow sending, deleting, or accessing sensitive settings
+# For more details, see PERMISSIONS.md and GMAIL_SETUP.md
+# If modifying these scopes, delete the file token.json to force re-authorization.
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 # Gmail sync function
 def sync_gmail():
+    # Check if credentials.json exists
+    if not os.path.exists('credentials.json'):
+        st.sidebar.error("❌ credentials.json not found!")
+        st.sidebar.info("📖 See [GMAIL_SETUP.md](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/GMAIL_SETUP.md) for setup instructions.")
+        return
+    
     creds = None
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
@@ -71,6 +83,8 @@ def sync_gmail():
         st.sidebar.success('Resumes synced from Gmail.')
     except HttpError as error:
         st.sidebar.error(f'An error occurred: {error}')
+        if 'insufficient' in str(error).lower() or 'permission' in str(error).lower():
+            st.sidebar.info("💡 This might be a permission issue. See [PERMISSIONS.md](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/PERMISSIONS.md) for details.")
 
 # Ensure Hugging Face transformers and dependencies are installed
 def ensure_hf_dependencies():
