@@ -1887,8 +1887,12 @@ def chroma_upsert_from_mysql(sql: str, id_col: str = "id", filename_col: str = "
     database = st.session_state.get('mysql_db', '')
     connect_timeout = int(st.session_state.get('mysql_connect_timeout', 10) or 10)
 
-    conn = mysql.connector.connect(host=host, port=port, user=user, password=password,
-                                   database=database, connection_timeout=connect_timeout)
+    conn = mysql.connector.connect(
+        host=host, port=port, user=user, password=password,
+        database=database, connection_timeout=connect_timeout,
+        read_timeout=300, write_timeout=300,  # 5 minutes for large data transfers
+        autocommit=True, use_pure=True
+    )
     cur = conn.cursor(dictionary=True)
     cur.execute(sql)
     rows = cur.fetchmany(size=limit) if limit else cur.fetchall()
@@ -1981,8 +1985,12 @@ def mysql_fetch_blob_by_id(mysql_id) -> bytes | None:
     connect_timeout = int(st.session_state.get('mysql_connect_timeout', 10) or 10)
     sql = st.session_state.get('mysql_download_sql', 'SELECT content FROM resumes WHERE id=%s')
     try:
-        conn = mysql.connector.connect(host=host, port=port, user=user, password=password,
-                                       database=database, connection_timeout=connect_timeout)
+        conn = mysql.connector.connect(
+            host=host, port=port, user=user, password=password,
+            database=database, connection_timeout=connect_timeout,
+            read_timeout=60, write_timeout=60,  # 1 minute for single blob fetch
+            autocommit=True, use_pure=True
+        )
         cur = conn.cursor()
         cur.execute(sql, (mysql_id,))
         row = cur.fetchone()
@@ -2109,10 +2117,21 @@ def _sync_from_mysql(host: str, port: int, user: str, password: str, database: s
             "user": user,
             "password": password,
             "database": database,
+            "autocommit": True,  # Avoid transaction timeouts
+            "use_pure": True,  # Use pure Python implementation for better stability
         }
         try:
             if connect_timeout and int(connect_timeout) > 0:
                 conn_args["connection_timeout"] = int(connect_timeout)
+            else:
+                conn_args["connection_timeout"] = 30  # Default 30s connection timeout
+        except Exception:
+            conn_args["connection_timeout"] = 30
+        # Add read/write timeouts for long-running queries
+        try:
+            # Set longer timeouts for large result sets
+            conn_args["read_timeout"] = 300  # 5 minutes for reading data
+            conn_args["write_timeout"] = 300  # 5 minutes for writing data
         except Exception:
             pass
         # SSL options (optional)
@@ -2125,10 +2144,38 @@ def _sync_from_mysql(host: str, port: int, user: str, password: str, database: s
                 conn_args["ssl_cert"] = ssl_cert
             if ssl_key:
                 conn_args["ssl_key"] = ssl_key
-        conn = mysql.connector.connect(**conn_args)
-        cur = conn.cursor(dictionary=True)
-        cur.execute(sql)
-        rows = cur.fetchmany(size=limit) if limit else cur.fetchall()
+        
+        # Retry logic for transient connection errors
+        max_retries = 3
+        retry_delay = 2  # seconds
+        last_error = None
+        
+        for attempt in range(max_retries):
+            try:
+                conn = mysql.connector.connect(**conn_args)
+                cur = conn.cursor(dictionary=True)
+                cur.execute(sql)
+                rows = cur.fetchmany(size=limit) if limit else cur.fetchall()
+                break  # Success, exit retry loop
+            except mysql.connector.errors.OperationalError as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    # Retry on connection errors
+                    import time
+                    time.sleep(retry_delay * (attempt + 1))  # Exponential backoff
+                    try:
+                        if 'conn' in locals():
+                            conn.close()
+                    except Exception:
+                        pass
+                    continue
+                else:
+                    # Final attempt failed, raise the error
+                    raise
+            except Exception as e:
+                # Non-connection errors, don't retry
+                last_error = e
+                raise
         total = len(rows) if rows else 0
         stats['fetched'] = total
         if callable(progress_cb):
@@ -2249,10 +2296,20 @@ def _test_mysql_connection(host: str, port: int, user: str, password: str, datab
         "user": user,
         "password": password,
         "database": database,
+        "autocommit": True,  # Avoid transaction timeouts
+        "use_pure": True,  # Use pure Python implementation for better stability
     }
     try:
         if connect_timeout and int(connect_timeout) > 0:
             conn_args["connection_timeout"] = int(connect_timeout)
+        else:
+            conn_args["connection_timeout"] = 30  # Default 30s connection timeout
+    except Exception:
+        conn_args["connection_timeout"] = 30
+    # Add read/write timeouts
+    try:
+        conn_args["read_timeout"] = 60  # 1 minute for test query
+        conn_args["write_timeout"] = 60
     except Exception:
         pass
     if ssl_disabled is True:
@@ -2295,10 +2352,20 @@ def _peek_mysql_rows(host: str, port: int, user: str, password: str, database: s
         "user": user,
         "password": password,
         "database": database,
+        "autocommit": True,  # Avoid transaction timeouts
+        "use_pure": True,  # Use pure Python implementation for better stability
     }
     try:
         if connect_timeout and int(connect_timeout) > 0:
             conn_args["connection_timeout"] = int(connect_timeout)
+        else:
+            conn_args["connection_timeout"] = 30  # Default 30s connection timeout
+    except Exception:
+        conn_args["connection_timeout"] = 30
+    # Add read/write timeouts
+    try:
+        conn_args["read_timeout"] = 60  # 1 minute for preview query
+        conn_args["write_timeout"] = 60
     except Exception:
         pass
     if ssl_disabled is True:
