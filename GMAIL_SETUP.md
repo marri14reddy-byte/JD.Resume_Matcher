@@ -53,10 +53,19 @@ The Gmail integration allows the application to:
 **Scopes:**
 5. Click "Add or Remove Scopes"
 6. Filter or search for "Gmail API"
-7. Select the scope: `https://www.googleapis.com/auth/gmail.modify`
-   - This allows reading emails and marking them as read
+7. Select one of these scopes based on which application file you'll use:
+   - **Recommended:** `https://www.googleapis.com/auth/gmail.readonly`
+     - For resume_matcher_rag.py (main application)
+     - Read-only access to emails and attachments
+     - More secure, minimum required permissions
+   - **Alternative:** `https://www.googleapis.com/auth/gmail.modify`
+     - For Project1.py (alternative version)
+     - Allows reading emails AND marking them as read
+     - Use if you want processed emails marked automatically
 8. Click "Update"
 9. Click "Save and Continue"
+
+**Note:** Most users should choose `gmail.readonly` for better security. You can always change this later if needed.
 
 **Test Users (Important!):**
 10. Click "Add Users"

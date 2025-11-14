@@ -1591,6 +1591,12 @@ def download_attachments_from_gmail():
     from google_auth_oauthlib.flow import InstalledAppFlow
     from google.auth.transport.requests import Request
     import streamlit as st
+    # Gmail API OAuth Configuration
+    # SCOPES: Defines what Gmail permissions the app requests
+    # - gmail.readonly: Allows reading emails and accessing attachments only
+    # - This scope is sufficient for resume download without marking emails as read
+    # For more details, see PERMISSIONS.md and GMAIL_SETUP.md
+    # If modifying these scopes, delete the file token.pickle to force re-authorization.
     SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
     creds = None
     if os.path.exists('token.pickle'):
@@ -1604,6 +1610,7 @@ def download_attachments_from_gmail():
             cred_path = os.path.join(project_dir, 'credentials.json')
             if not os.path.exists(cred_path):
                 st.error(f"Missing credentials.json for Gmail OAuth. Please place it in {project_dir}.")
+                st.info("📖 Need help? See the [Gmail Setup Guide](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/GMAIL_SETUP.md) for step-by-step instructions.")
                 return 0, None
             flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
             creds = flow.run_local_server(port=0)
@@ -3389,7 +3396,7 @@ with main_tabs[1]:
                 st.markdown(f"🟢 <b>Connected:</b> {gmail_user}", unsafe_allow_html=True)
             else:
                 st.markdown("🔴 <b>Not connected</b>", unsafe_allow_html=True)
-                st.caption("Place credentials.json in this app's folder to enable Gmail OAuth.")
+                st.caption("Place credentials.json in this app's folder to enable Gmail OAuth. See [GMAIL_SETUP.md](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/GMAIL_SETUP.md) for setup instructions.")
 
         with c_actions:
             ac1, ac2 = st.columns([1,1])

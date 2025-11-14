@@ -10,6 +10,26 @@ The JD.Resume_Matcher application requires specific permissions to function prop
 
 ### 1. Gmail API Permissions
 
+The application uses different Gmail API scopes depending on which file you're running:
+
+#### Main Application (resume_matcher_rag.py)
+
+**Scope:** `https://www.googleapis.com/auth/gmail.readonly`
+
+**Purpose:** This scope allows the application to:
+- Read emails from your Gmail inbox (read-only)
+- Access email attachments (resume files)
+- Search for specific emails with attachments
+- Download attachments without modifying email status
+
+**Why Gmail.Readonly?**
+- The main application only needs to download resumes from email attachments
+- It does NOT mark emails as read or modify any email properties
+- This is the minimum permission needed for read-only access
+- Provides better security with least-privilege principle
+
+#### Alternative Application (Project1.py)
+
 **Scope:** `https://www.googleapis.com/auth/gmail.modify`
 
 **Purpose:** This scope allows the application to:
@@ -19,16 +39,20 @@ The JD.Resume_Matcher application requires specific permissions to function prop
 - Search for specific emails with attachments
 
 **Why Gmail.Modify?**
-- The application needs to mark emails as read after downloading resume attachments to avoid reprocessing
+- This version marks emails as read after downloading to avoid reprocessing
 - This is the minimum scope required for both reading emails AND modifying their labels/status
-- The app does NOT send emails, delete emails, or access sensitive settings
+- The app still does NOT send emails, delete emails, or access sensitive settings
+
+**Which Scope to Use?**
+- Use `gmail.readonly` (resume_matcher_rag.py) for maximum security if you don't need emails marked as read
+- Use `gmail.modify` (Project1.py) if you want processed emails automatically marked as read
 
 ### 2. File System Permissions
 
 **Purpose:** The application needs local file system access to:
 - Store downloaded resumes in `downloaded_resumes/` directory
 - Cache embeddings and text extractions for performance
-- Store OAuth tokens securely (`token.json`)
+- Store OAuth tokens securely (`token.json` or `token.pickle`)
 - Maintain a local SQLite database (`resumes.db`)
 - Store FAISS indexes for fast resume retrieval
 
@@ -55,10 +79,11 @@ The JD.Resume_Matcher application requires specific permissions to function prop
   - Already included in `.gitignore`
   - Place in application root directory
 
-- **token.json**: Contains OAuth access/refresh tokens
+- **token.json / token.pickle**: Contains OAuth access/refresh tokens
   - Automatically generated after first OAuth flow
+  - Different files may use different names (token.json or token.pickle)
   - Should NEVER be committed to version control
-  - Already included in `.gitignore` (as `token.pickle`)
+  - Both filenames are included in `.gitignore`
   - Will be regenerated if deleted
 
 ### Data Privacy
@@ -74,7 +99,7 @@ You can revoke Gmail API access at any time:
 1. Visit [Google Account Permissions](https://myaccount.google.com/permissions)
 2. Find "JD Resume Matcher" (or your OAuth app name)
 3. Click "Remove Access"
-4. Delete `token.json` from the application directory
+4. Delete `token.json` or `token.pickle` from the application directory
 
 ## Optional Features
 
