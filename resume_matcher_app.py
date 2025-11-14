@@ -26,7 +26,11 @@ from google.auth.transport.requests import Request
 from pyresparser import ResumeParser
 from concurrent.futures import ThreadPoolExecutor
 
-# Gmail API setup
+# Gmail API OAuth Configuration
+# SCOPES: Defines what Gmail permissions the app requests
+# - gmail.readonly: Allows reading emails and accessing attachments only
+# For more details, see PERMISSIONS.md and GMAIL_SETUP.md
+# If modifying these scopes, delete the file token.pickle to force re-authorization.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
 
 def authenticate_gmail():
@@ -42,6 +46,7 @@ def authenticate_gmail():
 				cred_path = r'C:\\Users\\Srinidh\\Desktop\\prj\\credentials.json'
 				if not os.path.exists(cred_path):
 					st.error(f"credentials.json not found at {cred_path}. Please place your Gmail API credentials there.")
+					st.info("📖 Need help? See the [Gmail Setup Guide](https://github.com/marri14reddy-byte/JD.Resume_Matcher/blob/main/GMAIL_SETUP.md) for step-by-step instructions.")
 					return None
 				flow = InstalledAppFlow.from_client_secrets_file(cred_path, SCOPES)
 				creds = flow.run_local_server(port=0)
